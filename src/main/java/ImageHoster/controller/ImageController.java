@@ -5,7 +5,6 @@ import ImageHoster.model.Tag;
 import ImageHoster.model.User;
 import ImageHoster.service.ImageService;
 import ImageHoster.service.TagService;
-import com.sun.org.apache.xpath.internal.operations.Mod;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -37,20 +36,20 @@ public class ImageController {
     }
 
     //This method is called when the details of the specific image with corresponding title are to be displayed
-    //The logic is to get the image from the databse with corresponding title. After getting the image from the database the details are shown
+    //The logic is to get the image from the database with corresponding title. After getting the image from the database the details are shown
     //First receive the dynamic parameter in the incoming request URL in a string variable 'title' and also the Model type object
-    //Call the getImageByTitle() method in the business logic to fetch all the details of that image
+    //Call the getImage() method in the business logic to fetch all the details of that image
     //Add the image in the Model type object with 'image' as the key
     //Return 'images/image.html' file
 
     //Also now you need to add the tags of an image in the Model type object
     //Here a list of tags is added in the Model type object
     //this list is then sent to 'images/image.html' file and the tags are displayed
-    @RequestMapping("/images/{title}")
-    public String showImage(@PathVariable("title") String title, Model model) {
-        Image image = imageService.getImageByTitle(title);
+    @RequestMapping("/images/{id}/{title}")
+    public String showImage(@PathVariable("id") Integer id, Model model) {
+        Image image = imageService.getImage(id);
         model.addAttribute("image", image);
-        model.addAttribute("tags", image.getTags());
+        model.addAttribute("tags", convertTagsToString(image.getTags()));
         return "images/image";
     }
 
