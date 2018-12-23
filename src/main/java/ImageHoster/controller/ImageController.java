@@ -1,8 +1,10 @@
 package ImageHoster.controller;
 
+import ImageHoster.model.Comment;
 import ImageHoster.model.Image;
 import ImageHoster.model.Tag;
 import ImageHoster.model.User;
+import ImageHoster.service.CommentService;
 import ImageHoster.service.ImageService;
 import ImageHoster.service.TagService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,9 @@ public class ImageController {
     @Autowired
     private TagService tagService;
 
+    @Autowired
+    private CommentService commentService;
+
     //This method displays all the images in the user home page after successful login
     @RequestMapping("images")
     public String getUserImages(Model model) {
@@ -49,7 +54,9 @@ public class ImageController {
     public String showImage(@PathVariable("id") Integer id, Model model) {
         Image image = imageService.getImage(id);
         model.addAttribute("image", image);
-        model.addAttribute("tags", convertTagsToString(image.getTags()));
+        model.addAttribute("tags", image.getTags());
+        List<Comment> comments = commentService.getAllComments(image);
+        model.addAttribute("comments", comments);
         return "images/image";
     }
 
@@ -98,6 +105,8 @@ public class ImageController {
         String tags = convertTagsToString(image.getTags());
         model.addAttribute("image", image);
         model.addAttribute("tags", tags);
+        List<Comment> comments = commentService.getAllComments(image);
+        model.addAttribute("comments", comments);
 
         User owner = image.getUser();
         User loggedUser = (User)session.getAttribute("loggeduser");
@@ -141,7 +150,7 @@ public class ImageController {
         updatedImage.setDate(new Date());
 
         imageService.updateImage(updatedImage);
-        return "redirect:/images/" + updatedImage.getTitle();
+        return "redirect:/images/" + updatedImage.getId() + '/' + updatedImage.getTitle();
     }
 
 
@@ -151,15 +160,19 @@ public class ImageController {
     @RequestMapping(value = "/deleteImage", method = RequestMethod.DELETE)
     public String deleteImageSubmit(@RequestParam(name = "imageId") Integer imageId, HttpSession session, Model model) {
         Image image = imageService.getImage(imageId);
+
         User owner = image.getUser();
         User loggedUser = (User)session.getAttribute("loggeduser");
         if (owner.getId() != loggedUser.getId()) {
             String errorMsg = "Only the owner of the image can delete the image";
             model.addAttribute("deleteError", errorMsg);
             model.addAttribute("image", image);
-            model.addAttribute("tags", convertTagsToString(image.getTags()));
+            model.addAttribute("tags", image.getTags());
+            List<Comment> comments = commentService.getAllComments(image);
+            model.addAttribute("comments", comments);
             return "images/image";
         }
+
         imageService.deleteImage(imageId);
         return "redirect:/images";
     }
@@ -200,10 +213,30 @@ public class ImageController {
         for (int i = 0; i <= tags.size() - 2; i++) {
             tagString.append(tags.get(i).getName()).append(",");
         }
-
-        Tag lastTag = tags.get(tags.size() - 1);
-        tagString.append(lastTag.getName());
+        if (tags.size() > 0) {
+            Tag lastTag = tags.get(tags.size() - 1);
+            tagString.append(lastTag.getName());
+        }
 
         return tagString.toString();
     }
+
+    @RequestMapping(value = "/image/{imageId}/{imageTitle}/comments", method = RequestMethod.POST)
+    public String addComment(@PathVariable("imageId") Integer imageId, @RequestParam(name = "comment") String text, HttpSession session, Model model) {
+        Comment comment = new Comment();
+        Image image = imageService.getImage(imageId);
+        comment.setImage(image);
+        User user = (User) session.getAttribute("loggeduser");
+        comment.setUser(user);
+        comment.setText(text);
+        comment.setCreatedDate(new Date());
+        commentService.addComment(comment);
+
+        model.addAttribute("image", image);
+        model.addAttribute("tags", image.getTags());
+        List<Comment> comments = commentService.getAllComments(image);
+        model.addAttribute("comments", comments);
+        return "images/image";
+    }
+
 }
