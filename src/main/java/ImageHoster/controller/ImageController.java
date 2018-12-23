@@ -102,9 +102,7 @@ public class ImageController {
     public String editImage(@RequestParam("imageId") Integer imageId, HttpSession session, Model model) {
         Image image = imageService.getImage(imageId);
 
-        String tags = convertTagsToString(image.getTags());
         model.addAttribute("image", image);
-        model.addAttribute("tags", tags);
         List<Comment> comments = commentService.getAllComments(image);
         model.addAttribute("comments", comments);
 
@@ -114,8 +112,12 @@ public class ImageController {
         if (owner.getId() != loggedUser.getId()) {
             String errorMsg = "Only the owner of the image can edit the image";
             model.addAttribute("editError", errorMsg);
+            model.addAttribute("tags", image.getTags());
             return "images/image";
         }
+
+        String tags = convertTagsToString(image.getTags());
+        model.addAttribute("tags", tags);
 
         return "images/edit";
     }
