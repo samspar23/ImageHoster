@@ -108,6 +108,7 @@ public class ImageController {
         List<Comment> comments = commentService.getAllComments(image);
         model.addAttribute("comments", comments);
 
+        // if the owner and the currently logged-in user are different, display error image
         User owner = image.getUser();
         User loggedUser = (User)session.getAttribute("loggeduser");
         if (owner.getId() != loggedUser.getId()) {
@@ -161,6 +162,7 @@ public class ImageController {
     public String deleteImageSubmit(@RequestParam(name = "imageId") Integer imageId, HttpSession session, Model model) {
         Image image = imageService.getImage(imageId);
 
+        // if the owner and the currently logged-in user are different, display error image
         User owner = image.getUser();
         User loggedUser = (User)session.getAttribute("loggeduser");
         if (owner.getId() != loggedUser.getId()) {

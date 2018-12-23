@@ -52,6 +52,9 @@ public class UserController {
         return "users/registration";
     }
 
+    // method to validate password
+    // takes password string as input
+    // returns a boolean indicating whether password is valid
     private boolean validatePassword(String password) {
         int digit = 0, letter = 0, special = 0;
         for (int i = 0; i < password.length(); i++) {
